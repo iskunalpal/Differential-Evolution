@@ -17,7 +17,12 @@ function ret_val = differentialEvolution(options)
 		ret_val = options;
 		return;
 	end
+	
+	% Defining variables
+	persistent population;
+	global eval_max eval_exceed;
 
+	% Extracting options into local variables
 	iter = options.max_iteration;
 	F = options.scale_factor_primary;
 	F_1 = options.scale_factor_secondary_1;
@@ -31,13 +36,12 @@ function ret_val = differentialEvolution(options)
 	mutation_switch = options.use_mutation_scheme;
 	sort_flag = options.use_sorted_selection;
 	print_flag = options.print_values;
-	persistent population;
-	global eval_max eval_exceed;
 	eval_max = options.func_eval;
 	eval_exceed = 0;
 	fitness = zeros(no_vector, 1);
 	fitness_trial = fitness;
 
+	% Initializing population
 	if prev_flag == 0 || isempty(population)
 		population = l_limit + (u_limit-l_limit).*rand(no_vector, no_dimension);
 	elseif prev_flag == 2
@@ -50,6 +54,7 @@ function ret_val = differentialEvolution(options)
 		population(1,:) = best_vector;
 	end
 
+	% Evaluating fitness of the individuals
 	for i = 1: no_vector
 		fitness(i) = obj_func(population(i,:));
 	end
@@ -60,40 +65,39 @@ function ret_val = differentialEvolution(options)
 	for iteration = 1: iter
 		mutant = population;
 
-		% 		mutation
+		% Mutation
 
 		for i = 1: no_vector
 	        permutation = randperm(no_vector);
 			switch mutation_switch
-			case 1
-				mutant(i,:) = population(permutation(1),:) + F * ...
-                		(population(permutation(2),:) - population(permutation(3),:));
-            		case 2
-            			mutant(i,:) = best_vector + F* ... 
-               			(population(permutation(1),:)-population(permutation(2),:));
-            		case 3
-            			mutant(i,:) = population(i,:) + F1*(best_vector-population(permutation(1),:)) + ... 
-                		F2*(population(permutation(2),:)-population(permutation(3),:)); 
-            		case 4
-            			mutant(i,:) = best_vector + ...
-            			F1*(population(permutation(1),:)-population(permutation(2),:))+ ...
-                		F2*(population(permutation(3),:)-population(permutation(4),:)); 
-            		case 5
-            			mutant(i,:) = population(permutation(1),:) + ... 
-                		F1*(population(permutation(2),:)-population(permutation(1),:))+ ... 
-                		F2*(population(permutation(4),:)-population(permutation(5),:)); 
-            		otherwise
-            			fprintf('\nError:\tMutation scheme not specefied.');
-            			fprintf('\nError:\tStopping optimization.\n');
-            	end
+				case 1
+					mutant(i,:) = population(permutation(1),:) + F * ...
+       		         		(population(permutation(2),:) - population(permutation(3),:));
+            			case 2
+            				mutant(i,:) = best_vector + F* ... 
+               				(population(permutation(1),:)-population(permutation(2),:));
+            			case 3
+            				mutant(i,:) = population(i,:) + F1*(best_vector-population(permutation(1),:)) + ... 
+               		 		F2*(population(permutation(2),:)-population(permutation(3),:)); 
+            			case 4
+            				mutant(i,:) = best_vector + ...
+            				F1*(population(permutation(1),:)-population(permutation(2),:))+ ...
+                			F2*(population(permutation(3),:)-population(permutation(4),:)); 
+            			case 5
+            				mutant(i,:) = population(permutation(1),:) + ... 
+               		 		F1*(population(permutation(2),:)-population(permutation(1),:))+ ... 
+                			F2*(population(permutation(4),:)-population(permutation(5),:)); 
+            			otherwise
+            				fprintf('\nError:\tMutation scheme not specefied.');
+            				fprintf('\nError:\tStopping optimization.\n');
+            		end
 
-            % 	boundary control
-
-           	mutant(i,mutant(i,:) < l_limit(i,:)) = l_limit(i,mutant(i,:) < l_limit(i,:));
-            	mutant(i,mutant(i,:) > u_limit(i,:)) = u_limit(i,mutant(i,:) > u_limit(i,:));
+               		 % Boundary control
+           		mutant(i,mutant(i,:) < l_limit(i,:)) = l_limit(i,mutant(i,:) < l_limit(i,:));
+            		mutant(i,mutant(i,:) > u_limit(i,:)) = u_limit(i,mutant(i,:) > u_limit(i,:));
 		end
 
-		% 		crossover
+		% Crossover
 
 		rand_mat = rand(no_vector, no_dimension);
 		trial = (rand_mat > Cr).*population + (rand_mat <= Cr).*mutant;
@@ -102,7 +106,7 @@ function ret_val = differentialEvolution(options)
 			fitness_trial(i) = obj_func(trial(i,:));
 		end
 
-		% 		selection
+		% Selection
 
 		if sort_flag == 0
 			population(fitness_trial < fitness,:) = trial(fitness_trial < fitness,:);
@@ -136,6 +140,7 @@ function ret_val = differentialEvolution(options)
 	return;
 end
 
+% Wrapper for the objective function
 function y = obj_func(x)
 	persistent function_evaluations;
 	global eval_exceed eval_max;
