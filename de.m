@@ -28,5 +28,7 @@ options.use_sorted_selection = 0;
 options.print_values = 1;
 % set to maxumum permitted function evaluations if any
 options.func_eval = -1;
+% name of the objective function
+options.fitness_func = 'objective_func';
 
 ret_val = differentialEvolution(options);

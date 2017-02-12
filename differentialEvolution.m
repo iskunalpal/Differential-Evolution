@@ -14,6 +14,7 @@ function ret_val = differentialEvolution(options)
 		options.use_sorted_selection = 0;
 		options.print_values = 1;
 		options.func_eval = -1;
+		options.fitness_func = 'objective_func';
 		ret_val = options;
 		return;
 	end
@@ -40,13 +41,14 @@ function ret_val = differentialEvolution(options)
 	eval_exceed = 0;
 	fitness = zeros(no_vector, 1);
 	fitness_trial = fitness;
+	fitness_func = str2func(options.fitness_func);	
 
 	% Initializing population
 	if prev_flag == 0 || isempty(population)
 		population = l_limit + (u_limit-l_limit).*rand(no_vector, no_dimension);
 	elseif prev_flag == 2
 		for i = 1: no_vector
-			fitness(i) = obj_func(population(i,:));
+			fitness(i) = obj_func(fitness_func, population(i,:));
 		end
 		[best_fitness ind] = min(fitness);
 		best_vector = population(ind,:);
@@ -56,7 +58,7 @@ function ret_val = differentialEvolution(options)
 
 	% Evaluating fitness of the individuals
 	for i = 1: no_vector
-		fitness(i) = obj_func(population(i,:));
+		fitness(i) = obj_func(fitness_func, population(i,:));
 	end
 
 	[best_fitness ind] = min(fitness);
@@ -68,7 +70,7 @@ function ret_val = differentialEvolution(options)
 		% Mutation
 
 		for i = 1: no_vector
-	        permutation = randperm(no_vector);
+	   		permutation = randperm(no_vector);
 			switch mutation_switch
 				case 1
 					mutant(i,:) = population(permutation(1),:) + F * ...
@@ -98,16 +100,14 @@ function ret_val = differentialEvolution(options)
 		end
 
 		% Crossover
-
 		rand_mat = rand(no_vector, no_dimension);
 		trial = (rand_mat > Cr).*population + (rand_mat <= Cr).*mutant;
 
 		for i = 1: no_vector
-			fitness_trial(i) = obj_func(trial(i,:));
+			fitness_trial(i) = obj_func(fitness_func, trial(i,:));
 		end
 
 		% Selection
-
 		if sort_flag == 0
 			population(fitness_trial < fitness,:) = trial(fitness_trial < fitness,:);
 			fitness(fitness_trial < fitness) = fitness_trial(fitness_trial < fitness,:);
@@ -141,7 +141,7 @@ function ret_val = differentialEvolution(options)
 end
 
 % Wrapper for the objective function
-function y = obj_func(x)
+function y = obj_func(fitness_func, x)
 	persistent function_evaluations;
 	global eval_exceed eval_max;
 	if isempty(function_evaluations)
@@ -153,5 +153,5 @@ function y = obj_func(x)
 	if function_evaluations > eval_max
 		eval_exceed = 1;
 	end
-	y = objective_func(x);
+	y = fitness_func(x);
 end
