@@ -5,5 +5,4 @@ To run the program use:
 ```
 > de
 ```
-
-The default objective function is specified in `objective_func.m`. If needed to run custom functions, this file can be edited to interface.
+The default objective function used is `objective_func`. Custom objective function can be specified in `de.m` under `options.fitness_func`.
